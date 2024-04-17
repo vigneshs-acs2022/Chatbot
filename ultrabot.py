@@ -143,7 +143,7 @@ Please type one of these commands:
                 return self.send_date_menu(chatID)
             elif text[0].lower() in ['evening', 'morning', 'afternoon']:
                 # Ask user to select a date
-                return self.send_message
+                return self.send_message(chatID,"Please Make Your Payment" + "https://buy.stripe.com/test_bIYcPS7SU9Cxg7K6ou")
             
             elif datetime.strptime(text[0].lower(), '%d/%m/%Y'):
                 if datetime.strptime(text[0].lower(), '%d/%m/%Y') <= datetime.today():
@@ -200,7 +200,7 @@ Please type one of these commands:
         # You need to implement this based on your available slots
         # Example:
         slot_menu = """Please select the time slot:
-                    1. 10:00 AM - 12:00 PM
-                    2. 2:00 PM - 4:00 PM
-                    3. 6:00 PM - 8:00 PM"""
+                    1. Morning
+                    2. Evening
+                    3. Afternoon"""
         return self.send_message(chatID, slot_menu)
