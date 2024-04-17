@@ -1,15 +1,21 @@
 import json
 import requests
 import datetime
+from flask import Flask
+from pymongo import MongoClient
 
-class ultraChatBot():    
+
+class ultraChatBot():
     def __init__(self, json):
+        app = Flask(__name__)
+        app.config['MONGO_URI'] = 'mongodb+srv://abineshjain:ILdXThPVkagMdNof@cars.xzjiizn.mongodb.net/'
+        mongo = MongoClient(app.config['MONGO_URI'])
+        self.db = mongo.get_database('ultrabot')
         self.json = json
         self.dict_messages = json['data']
-        self.ultraAPIUrl = 'https://api.ultramsg.com/{{instance_id}}/'
-        self.token = '{{token}}'
+        self.ultraAPIUrl = 'https://api.ultramsg.com/instance83629/'
+        self.token = 'ww3x3cicydsp4vh9'
 
-   
     def send_requests(self, type, data):
         url = f"{self.ultraAPIUrl}{type}?token={self.token}"
         headers = {'Content-type': 'application/json'}
@@ -17,50 +23,47 @@ class ultraChatBot():
         return answer.json()
 
     def send_message(self, chatID, text):
-        data = {"to" : chatID,
-                "body" : text}  
+        data = {"to": chatID,
+                "body": text}
         answer = self.send_requests('messages/chat', data)
         return answer
 
     def send_image(self, chatID):
-        data = {"to" : chatID,
-                "image" : "https://file-example.s3-accelerate.amazonaws.com/images/test.jpeg"}  
+        data = {"to": chatID,
+                "image": "https://file-example.s3-accelerate.amazonaws.com/images/test.jpeg"}
         answer = self.send_requests('messages/image', data)
         return answer
 
     def send_video(self, chatID):
-        data = {"to" : chatID,
-                "video" : "https://file-example.s3-accelerate.amazonaws.com/video/test.mp4"}  
+        data = {"to": chatID,
+                "video": "https://file-example.s3-accelerate.amazonaws.com/video/test.mp4"}
         answer = self.send_requests('messages/video', data)
         return answer
 
     def send_audio(self, chatID):
-        data = {"to" : chatID,
-                "audio" : "https://file-example.s3-accelerate.amazonaws.com/audio/2.mp3"}  
+        data = {"to": chatID,
+                "audio": "https://file-example.s3-accelerate.amazonaws.com/audio/2.mp3"}
         answer = self.send_requests('messages/audio', data)
         return answer
 
-
     def send_voice(self, chatID):
-        data = {"to" : chatID,
-                "audio" : "https://file-example.s3-accelerate.amazonaws.com/voice/oog_example.ogg"}  
+        data = {"to": chatID,
+                "audio": "https://file-example.s3-accelerate.amazonaws.com/voice/oog_example.ogg"}
         answer = self.send_requests('messages/voice', data)
         return answer
 
     def send_contact(self, chatID):
-        data = {"to" : chatID,
-                "contact" : "14000000001@c.us"}  
+        data = {"to": chatID,
+                "contact": "14000000001@c.us"}
         answer = self.send_requests('messages/contact', data)
         return answer
-
 
     def time(self, chatID):
         t = datetime.datetime.now()
         time = t.strftime('%Y-%m-%d %H:%M:%S')
         return self.send_message(chatID, time)
 
-
-    def welcome(self,chatID, noWelcome = False):
+    def welcome(self, chatID, noWelcome=False):
         welcome_string = ''
         if (noWelcome == False):
             welcome_string = "Hi , welcome to WhatsApp chatbot using Python\n"
@@ -77,34 +80,124 @@ Please type one of these commands:
 """
         return self.send_message(chatID, welcome_string)
 
+    def send_booking_confirmation(self, chatID, pet, service, date, slot):
+        # Logic to calculate price based on service, date, and slot
+        price = self.calculate_price(service, date, slot)
+
+        # Apply discounts based on conditions
+        discount = self.calculate_discount(date)
+
+        # Calculate final price after discount
+        final_price = price - discount
+
+        # Prepare message to send to customer
+        message = f"Booking Confirmation:\nPet: {pet}\nService: {service}\nDate: {date}\nSlot: {slot}\nPrice: ${final_price:.2f}"
+
+        # Send message to customer
+        return self.send_message(chatID, message)
+
+    def calculate_price(self, service, date, slot):
+        # Logic to calculate base price based on service, date, and slot
+        # You need to implement this based on your pricing structure
+        # For example, you might have different prices for different services, dates, and slots
+        # Return the calculated price
+        pass
+
+    def calculate_discount(self, date):
+        # Logic to calculate discount based on the date
+        # For example, you might offer discounts on Saturdays or premium on Mondays
+        # Return the calculated discount
+        pass
 
     def Processingـincomingـmessages(self):
-        if self.dict_messages != []:
-            message =self.dict_messages
+        message = self.dict_messages
+        chatID = message['from']
+        if not message['fromMe']:
             text = message['body'].split()
-            if not message['fromMe']:
-                chatID  = message['from'] 
-                if text[0].lower() == 'hi':
-                    return self.welcome(chatID)
-                elif text[0].lower() == 'time':
-                    return self.time(chatID)
-                elif text[0].lower() == 'image':
-                    return self.send_image(chatID)
-                elif text[0].lower() == 'video':
-                    return self.send_video(chatID)
-                elif text[0].lower() == 'audio':
-                    return self.send_audio(chatID)
-                elif text[0].lower() == 'voice':
-                    return self.send_voice(chatID)
-                elif text[0].lower() == 'contact':
-                    return self.send_contact(chatID)
-                else:
-                    return self.welcome(chatID, True)
-            else: return 'NoCommand'
+            collection = self.db['customers']
+            phone_numbers = [str(doc.get('phone', '')) +
+                             '@c.us' for doc in collection.find()]
 
+            if chatID not in phone_numbers:
+                return self.send_message(chatID, 'User Not Found')
+            if text[0].lower() == 'hi':
+                # Send the initial message and start the interaction
+                return self.send_welcome_message(chatID)
+            elif text[0].lower() == 'pet':
+                # Ask user to select a pet
+                return self.send_pet_menu(chatID)
+            elif text[0].lower() == 'service':
+                # Ask user to select a service
+                return self.send_service_menu(chatID)
+            elif text[0].lower() == 'date':
+                # Ask user to select a date
+                return self.send_date_menu(chatID)
+            elif text[0].lower() == 'slot':
+                # Ask user to select a slot
+                return self.send_slot_menu(chatID)
+            elif text[0].lower() == 'confirm':
+                # Confirm the booking and send confirmation message
+                return self.send_booking_confirmation(chatID, self.selected_pet, self.selected_service, self.selected_date, self.selected_slot)
+            else:
+                # Invalid command
+                return self.send_message(chatID, "Invalid command. Please type 'pet', 'service', 'date', 'slot', or 'confirm'.")
+        else:
+            return 'NoCommand'
 
-        
-        
+    def send_welcome_message(self, chatID):
+        # Send welcome message with available commands
+        welcome_message = """Hi, welcome to our pet booking service!\n
+                            Please select the following options to book a pet service:\n
+                            *Pet*: Choose your pet\n
+                            *Service*: Choose your service\n
+                            *Date*: Choose the date\n
+                            *Slot*: Choose the time slot\n
+                            *Confirm*: Confirm your booking"""
+        return self.send_message(chatID, welcome_message)
 
+    def send_pet_menu(self, chatID):
+        phone = int(chatID.split("@")[0])
+        # Query the pet collection from the database
+        collection = self.db['customers']
+        query = {"phone": phone}
+        # Assuming each document in the collection has a "name" field
+        pets = collection.find(query, {"pets": 1})
+        # Construct the pet menu dynamically
+        pet_menu = "Please select your pet:\n"
+        for pet in pets:
+            if 'pets' in pet:
+                for index, pet_details in enumerate(pet['pets'], start=1):
+                    pet_menu += f"{index}. {pet_details['name']}\n"
 
+        # Send the menu to the user
+        return self.send_message(chatID, pet_menu)
 
+    def send_service_menu(self, chatID):
+        # Logic to send menu for selecting service
+        # You need to implement this based on your available services
+        # Example:
+        service_menu = """Please select the service:
+                        1. Bathing
+                        2. Grooming
+                        3. Training"""
+        return self.send_message(chatID, service_menu)
+
+    def send_date_menu(self, chatID):
+        # Logic to send menu for selecting date
+        # You need to implement this based on your available dates
+        # Example:
+        date_menu = """Please select the date:
+                    1. April 18, 2024
+                    2. April 19, 2024
+                    3. April 20, 2024"""
+        return self.send_message(chatID, date_menu)
+
+    def send_slot_menu(self, chatID):
+        # Logic to send menu for selecting slot
+        # You need to implement this based on your available slots
+        # Example:
+        slot_menu = """Please select the time slot:
+                    1. 10:00 AM - 12:00 PM
+                    2. 2:00 PM - 4:00 PM
+                    3. 6:00 PM - 8:00 PM"""
+        return self.send_message(chatID, slot_menu)
