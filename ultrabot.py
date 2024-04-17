@@ -1,6 +1,6 @@
 import json
 import requests
-import datetime
+from datetime import datetime
 from flask import Flask
 from pymongo import MongoClient
 
@@ -138,10 +138,13 @@ Please type one of these commands:
             elif text[0].lower() in pet_menu:
                 # Ask user to select a service
                 return self.send_service_menu(chatID)
-            elif text[0].lower() == 'date':
+            elif text[0].lower() in ['bathing', 'grooming', 'training']:
                 # Ask user to select a date
                 return self.send_date_menu(chatID)
-            elif text[0].lower() == 'slot':
+
+            elif datetime.strptime(text[0].lower(), '%d/%m/%Y'):
+                if datetime.strptime(text[0].lower(), '%d/%m/%Y') <= datetime.today():
+                    return self.send_message(chatID, "Invalid date.")
                 # Ask user to select a slot
                 return self.send_slot_menu(chatID)
             elif text[0].lower() == 'confirm':
@@ -149,7 +152,7 @@ Please type one of these commands:
                 return self.send_booking_confirmation(chatID, self.selected_pet, self.selected_service, self.selected_date, self.selected_slot)
             else:
                 # Invalid command
-                return self.send_message(chatID, "Invalid command. Please type 'pet', 'service', 'date', 'slot', or 'confirm'.")
+                return self.send_message(chatID, "Invalid command.")
         else:
             return 'NoCommand'
 
@@ -189,10 +192,7 @@ Please type one of these commands:
         # Logic to send menu for selecting date
         # You need to implement this based on your available dates
         # Example:
-        date_menu = """Please select the date:
-                    1. April 18, 2024
-                    2. April 19, 2024
-                    3. April 20, 2024"""
+        date_menu = """Please Enter the Date in dd/mm/yyyy format"""
         return self.send_message(chatID, date_menu)
 
     def send_slot_menu(self, chatID):
