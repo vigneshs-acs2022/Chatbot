@@ -13,8 +13,8 @@ class ultraChatBot():
         self.db = mongo.get_database('ultrabot')
         self.json = json
         self.dict_messages = json['data']
-        self.ultraAPIUrl = 'https://api.ultramsg.com/instance83629/'
-        self.token = 'ww3x3cicydsp4vh9'
+        self.ultraAPIUrl = 'https://api.ultramsg.com/instance83729/'
+        self.token = 'jupjgvdf8cokxh7p'
 
     def send_requests(self, type, data):
         url = f"{self.ultraAPIUrl}{type}?token={self.token}"
@@ -147,6 +147,9 @@ Please type one of these commands:
                     return self.send_message(chatID, "Invalid date.")
                 # Ask user to select a slot
                 return self.send_slot_menu(chatID)
+            elif text[0].lower() in ['bathing', 'grooming', 'training']:
+                # Ask user to select a date
+                return self.send_date_menu(chatID)
             elif text[0].lower() == 'confirm':
                 # Confirm the booking and send confirmation message
                 return self.send_booking_confirmation(chatID, self.selected_pet, self.selected_service, self.selected_date, self.selected_slot)
