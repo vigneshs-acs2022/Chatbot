@@ -141,18 +141,15 @@ Please type one of these commands:
             elif text[0].lower() in ['bathing', 'grooming', 'training']:
                 # Ask user to select a date
                 return self.send_date_menu(chatID)
-
+            elif text[0].lower() in ['evening', 'morning', 'afternoon']:
+                # Ask user to select a date
+                return self.send_message
+            
             elif datetime.strptime(text[0].lower(), '%d/%m/%Y'):
                 if datetime.strptime(text[0].lower(), '%d/%m/%Y') <= datetime.today():
                     return self.send_message(chatID, "Invalid date.")
                 # Ask user to select a slot
                 return self.send_slot_menu(chatID)
-            elif text[0].lower() in ['bathing', 'grooming', 'training']:
-                # Ask user to select a date
-                return self.send_date_menu(chatID)
-            elif text[0].lower() == 'confirm':
-                # Confirm the booking and send confirmation message
-                return self.send_booking_confirmation(chatID, self.selected_pet, self.selected_service, self.selected_date, self.selected_slot)
             else:
                 # Invalid command
                 return self.send_message(chatID, "Invalid command.")
