@@ -117,16 +117,25 @@ Please type one of these commands:
             collection = self.db['customers']
             phone_numbers = [str(doc.get('phone', '')) +
                              '@c.us' for doc in collection.find()]
-
+            phone = int(chatID.split("@")[0])
+            # Query the pet collection from the database
+            collection = self.db['customers']
+            query = {"phone": phone}
+            # Assuming each document in the collection has a "name" field
+            pets = collection.find(query, {"pets": 1})
+            # Construct the pet menu dynamically
+            pet_menu = []
+            for pet in pets:
+                if 'pets' in pet:
+                    for index, pet_details in enumerate(pet['pets'], start=1):
+                        pet_menu.append(pet_details['name'].lower())
+            print("pet_menu", pet_menu)
             if chatID not in phone_numbers:
                 return self.send_message(chatID, 'User Not Found')
             if text[0].lower() == 'hi':
                 # Send the initial message and start the interaction
-                return self.send_welcome_message(chatID)
-            elif text[0].lower() == 'pet':
-                # Ask user to select a pet
-                return self.send_pet_menu(chatID)
-            elif text[0].lower() == 'service':
+                return self.send_welcome_message(chatID), self.send_pet_menu(chatID)
+            elif text[0].lower() in pet_menu:
                 # Ask user to select a service
                 return self.send_service_menu(chatID)
             elif text[0].lower() == 'date':
@@ -146,13 +155,7 @@ Please type one of these commands:
 
     def send_welcome_message(self, chatID):
         # Send welcome message with available commands
-        welcome_message = """Hi, welcome to our pet booking service!\n
-                            Please select the following options to book a pet service:\n
-                            *Pet*: Choose your pet\n
-                            *Service*: Choose your service\n
-                            *Date*: Choose the date\n
-                            *Slot*: Choose the time slot\n
-                            *Confirm*: Confirm your booking"""
+        welcome_message = "Hi, welcome to our pet booking service"
         return self.send_message(chatID, welcome_message)
 
     def send_pet_menu(self, chatID):
